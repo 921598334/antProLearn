@@ -3,12 +3,16 @@ import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import { Row, Col, Tag, Card, Table, Space, Button, Pagination } from 'antd';
 import styles from './index.less'
 import { useRequest } from 'umi'
+import ColBuilder from './build/ColBuilder'
+import ActionBuilder from './build/ActionBuilder'
+
 
 const index = () => {
 
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
 
+    //确认page, perPage变化后在发起请求
     useEffect(() => {
         init.run()
     }, [page, perPage])
@@ -29,8 +33,10 @@ const index = () => {
                 <Col xs={24} sm={12}>111</Col>
                 <Col xs={24} sm={12} className={styles.tableToolbar}>
                     <Space>
-                        <Button type="primary">add</Button>
+                        {/* <Button type="primary">add</Button>
                         <Button type="primary">add2</Button>
+                         */}
+                        {ActionBuilder(init?.data?.layout?.tableToolBar)}
 
                     </Space>
 
@@ -42,8 +48,14 @@ const index = () => {
     const afterTableLayout = () => {
         return (
             <Row>
-                <Col xs={24} sm={12}>111</Col>
+                <Col xs={24} sm={12}>
+                    <Space>  
+                        {ActionBuilder(init?.data?.layout?.batchToolBar)}
+                    </Space>
+                </Col>
+
                 <Col xs={24} sm={12} className={styles.tableToolbar}>
+
                     <Pagination
                         current={init?.data?.meta.page || 0}
                         total={init?.data?.meta.total || 1}
@@ -60,8 +72,6 @@ const index = () => {
                             // //通过这个函数可以重新发起请求
                             // init.run()
                         }}
-
-
                     />
                 </Col>
             </Row>
@@ -71,6 +81,10 @@ const index = () => {
     const batchLayout = () => {
 
     }
+
+
+   
+
 
 
     return (
@@ -84,10 +98,21 @@ const index = () => {
                 <Table
 
                     dataSource={init?.data?.dataSource}
-                    columns={init?.data?.layout?.tableColumn.filter((item) => {
-                        //过滤，如果返回为真就保留，返回为false就剔除
-                        return item.hideInColumn !== true
-                    })}
+                    columns={
+
+                        ColBuilder(init?.data?.layout?.tableColumn)
+
+                        // //拼接添加一列作为id,ID显示在最前面
+                        // [{ title: 'ID', dataIndex: 'id', key: 'id' }]
+                        //     //concat内部的数组不能为undefined，所以如果是undefined，那就传入默认的空数组
+                        //     .concat(init?.data?.layout?.tableColumn || [])
+                        //     .filter((item) => {
+                        //         //过滤，如果返回为真就保留，返回为false就剔除
+                        //         return item.hideInColumn !== true
+                        //     })
+
+
+                    }
 
                     loading={init?.data === undefined}
                     pagination={false}
