@@ -4,6 +4,7 @@ import { useRequest } from 'umi'
 import FormBuilder from '../build/FormBuilder'
 import ActionBuilder from '../build/ActionBuilder'
 import moment from 'moment'
+import { submintAdaptor, setFildsAdaper } from '../helper'
 
 const UserModel = (props) => {
 
@@ -19,27 +20,29 @@ const UserModel = (props) => {
     // const [method, setmethod] = useState('')
     // const [values, setValues] = useState('')
 
-    console.log('选择的record:');
-    console.log(props.record);
-
-    //第一个参数是要执行的函数，第二个参数是一个列表，列表中的值变化时执行函数
-    // useEffect(() => {
-
-    //     if(props.record===null){
-    //         form.resetFields()
-    //     }else{
-    //         //如果传入的是null或者undefined，哪不会生效
-    //         form.setFieldsValue(props.record)
-    //     }
-
-    // }, [props.record])
+   
 
 
     //默认get请求
-    const init = useRequest(props.modelUrl, {
+    const init = useRequest(`https://public-api-v2.aspirantzhang.com${props.modelUrl}?X-API-KEY=antd`, {
         //是直接执行还是手动调用执行，true是手动执行run()，默认是false
-        manual: true
+        manual: true,
+        onError:()=>{
+
+        },
+        onSuccess:()=>{
+            
+        }
     });
+
+    // const init = useRequest(props.modelUrl, {
+    //     //是直接执行还是手动调用执行，true是手动执行run()，默认是false
+    //     manual: true
+    // });
+
+
+
+
 
     // const request = useRequest({
     //     url: url,
@@ -52,6 +55,7 @@ const UserModel = (props) => {
 
     const request = useRequest(
         (values) => {
+            message.loading("正在发送请求.....")
             console.log('request发送的参数为：')
             console.log(values)
             return {
@@ -59,18 +63,35 @@ const UserModel = (props) => {
                 method: values.method,
                 //body: JSON.stringify(values)
                 //data和body相比，可以自动把对象json化
-                data:{
-                    ...values,
-                    'X-API-KEY':'antd',
-                    'create_time':moment(values.create_time).format(),
-                    'update_time':moment(values.create_time).format(),
+                data: {
+                    ...submintAdaptor(values),
+                    'X-API-KEY': 'antd',
+
                 },
             }
         }
 
         , {
 
-            manual: true
+            manual: true,
+            onError:()=>{
+
+            },
+           
+            //得到后端成功返回全部数据(需要添加这个)
+            formatResult:(res)=>{
+                return res
+            },
+             //如果没有上面的formatResult的化话，只接收返回数据有data的json，加上后data有后端返回的所有数据
+             //{"success":true,"message":"Add successfully.","data":[]}
+             onSuccess:(data)=>{
+                console.log("成功时返回：")
+                console.log(data)
+                //添加成功就关闭
+                message.success(data.message)
+                props.handleFinish()
+            },
+
         });
 
 
@@ -79,6 +100,7 @@ const UserModel = (props) => {
     useEffect(() => {
         if (props.visible) {
 
+            console.log('可视化状态发生改变')
 
             //在弹出对话框之前先清空
             form.resetFields()
@@ -291,33 +313,7 @@ const UserModel = (props) => {
 
 
 
-    //这里会根据init.data.layout.tabs下data中记录的类型(找key)，然后记录，之后来对init.data.dataSource中的数据类型进行适配
-    const setFildsAdaper = (data) => {
 
-        if (data?.layout?.tabs && data?.dataSource) {
-
-
-            //需要返回的，处理好的数据
-            const result = {}
-
-            data.layout.tabs.forEach((tab) => {
-                tab.data.forEach((field) => {
-                    if (field.type === 'datetime') {
-
-                        result[field.key] = moment(data.dataSource[field.key])
-                    } else {
-                        result[field.key] = data.dataSource[field.key]
-                    }
-                    //如果还有其他类型需要单独处理在这里添加else if就可以了
-                })
-            })
-
-            return result;
-        } else {
-            return {};
-        }
-
-    }
 
 
 
@@ -345,10 +341,9 @@ const UserModel = (props) => {
         //setuse的操作都是异步的，可能导致赋值还没有完毕就提前提交
         //setValues(values)
 
+
         //表单中的数据都在values中
         request.run(values)
-        message.success('成功提交')
-        props.handleFinish()
 
     };
 
@@ -408,7 +403,7 @@ const UserModel = (props) => {
             }}
             onCancel={props.handleCancel}
             forceRender
-            footer={ActionBuilder(init?.data?.layout?.actions[0].data, actionHandel)}
+            footer={ActionBuilder(init?.data?.layout?.actions[0].data, actionHandel,request.loading)}
         >
 
             <Form

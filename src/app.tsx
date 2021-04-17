@@ -67,15 +67,15 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     },
     links: isDev
       ? [
-          <Link to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>openAPI 文档</span>
-          </Link>,
-          <Link to="/~docs">
-            <BookOutlined />
-            <span>业务组件文档</span>
-          </Link>,
-        ]
+        <Link to="/umi/plugin/openapi" target="_blank">
+          <LinkOutlined />
+          <span>openAPI 文档</span>
+        </Link>,
+        <Link to="/~docs">
+          <BookOutlined />
+          <span>业务组件文档</span>
+        </Link>,
+      ]
       : [],
     menuHeaderRender: undefined,
     // 自定义 403 页面
@@ -106,24 +106,52 @@ const codeMessage = {
 /** 异常处理程序
  * @see https://beta-pro.ant.design/docs/request-cn
  */
+//该拦截器拦截：
+//BizError业务类型错误，请求成功但是success：false
+//responseError请求类型错误，http请求失败
 const errorHandler = (error: ResponseError) => {
-  const { response } = error;
-  if (response && response.status) {
-    const errorText = codeMessage[response.status] || response.statusText;
-    const { status, url } = response;
 
+
+
+  if (error.name === 'BizError') {
+    if (error.data.message) {
+      notification.error({
+        message: `业务类型错误`,
+        description: error.data.message,
+      });
+    }
+  }else if (error.name === 'ResponsetError') {
+    if (error.data.message) {
+      notification.error({
+        message: `请求类型错误:${error.response.status}`,
+        description: error.response.statusText,
+      });
+    }
+  }else{
     notification.error({
-      message: `请求错误 ${status}: ${url}`,
-      description: errorText,
+      message: `其他类型错误`,
+      description: '其他错误',
     });
   }
 
-  if (!response) {
-    notification.error({
-      description: '您的网络发生异常，无法连接服务器',
-      message: '网络异常',
-    });
-  }
+
+  // const { response } = error;
+  // if (response && response.status) {
+  //   const errorText = codeMessage[response.status] || response.statusText;
+  //   const { status, url } = response;
+
+  //   notification.error({
+  //     message: `请求错误 ${status}: ${url}`,
+  //     description: errorText,
+  //   });
+  // }
+
+  // if (!response) {
+  //   notification.error({
+  //     description: '您的网络发生异常，无法连接服务器',
+  //     message: '网络异常',
+  //   });
+  // }
   throw error;
 };
 

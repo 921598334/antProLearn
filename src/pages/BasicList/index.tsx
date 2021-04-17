@@ -15,7 +15,7 @@ const index = () => {
     const [modelUrl, setModelUrl] = useState(false)
 
     const [modelTitle, setModelTitle] = useState("")
-    
+
     //确认page, perPage变化后在发起请求
     useEffect(() => {
         init.run()
@@ -43,7 +43,33 @@ const index = () => {
     };
 
 
+    const actionHandel = (action,record) => {
 
+        console.log('点击了：')
+        console.log(action)
+        console.log(record)
+
+        switch (action.action) {
+            case 'modal':
+
+                setModelUrl(action.uri)
+                setModelVisible(true)
+                setModelTitle("添加")
+
+                break;
+
+            case 'page':
+
+                break;
+
+            case 'reload':
+
+                break;
+            default:
+                break;
+        }
+
+    }
 
 
 
@@ -61,7 +87,7 @@ const index = () => {
                         {/* <Button type="primary">add</Button>
                         <Button type="primary">add2</Button>
                          */}
-                        {ActionBuilder(init?.data?.layout?.tableToolBar)}
+                        {ActionBuilder(init?.data?.layout?.tableToolBar, actionHandel,false)}
 
                     </Space>
 
@@ -75,7 +101,7 @@ const index = () => {
             <Row>
                 <Col xs={24} sm={12}>
                     <Space>
-                        {ActionBuilder(init?.data?.layout?.batchToolBar)}
+                        {ActionBuilder(init?.data?.layout?.batchToolBar,actionHandel)}
                     </Space>
                 </Col>
 
@@ -119,7 +145,7 @@ const index = () => {
         <PageContainer>
             { searchLayout()}
 
-            <Button onClick={() => {
+            {/* <Button onClick={() => {
                 setModelUrl("https://public-api-v2.aspirantzhang.com/api/admins/add?X-API-KEY=antd")
                 setModelVisible(true)
                 setModelTitle("添加")
@@ -129,12 +155,12 @@ const index = () => {
 
 
             <Button onClick={() => {
-                setModelUrl("https://public-api-v2.aspirantzhang.com/api/admins/206?X-API-KEY=antd")
+                setModelUrl("https://public-api-v2.aspirantzhang.com/api/admins/335?X-API-KEY=antd")
                 setModelVisible(true)
                 setModelTitle("修改")
             }}>
                 edit
-            </Button>
+            </Button> */}
 
 
 
@@ -145,7 +171,7 @@ const index = () => {
                     dataSource={init?.data?.dataSource}
                     columns={
 
-                        ColBuilder(init?.data?.layout?.tableColumn)
+                        ColBuilder(init?.data?.layout?.tableColumn,actionHandel)
 
                         // //拼接添加一列作为id,ID显示在最前面
                         // [{ title: 'ID', dataIndex: 'id', key: 'id' }]
