@@ -32,29 +32,15 @@ const index = () => {
 
     //关闭修改对话框
     const handleCancel = () => {
-        setModelVisible(false)
-    };
-
-    //点击提交
-    const onFinish = (values) => {
-
-        // if (record === null) {
-        //     dispatch({
-        //         type: 'users/add',
-        //         payload: { ...values },
-        //     })
-        // } else {
-        //     dispatch({
-        //         type: 'users/edit',
-        //         payload: { ...values, key: record.key },
-        //     })
-        // }
-
-        message.success('成功提交')
+        console.log('点击取消，关闭对话框')
         setModelVisible(false)
     };
 
 
+    const onFinish = () => {
+        console.log('点击提交，关闭对话框')
+        setModelVisible(false)
+    };
 
 
 
@@ -185,7 +171,7 @@ const index = () => {
 
             <UserModel
                 visible={modelVisible}
-                onFinish={onFinish}
+                handleFinish={onFinish}
                 handleCancel={handleCancel}
                 //record={record}
                 modelUrl={modelUrl}

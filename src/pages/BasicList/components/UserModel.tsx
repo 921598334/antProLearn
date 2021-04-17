@@ -14,6 +14,10 @@ const UserModel = (props) => {
         wrapperCol: { span: 16 },
     };
 
+    //不合适
+    // const [url, setUrl] = useState('')
+    // const [method, setmethod] = useState('')
+    // const [values, setValues] = useState('')
 
     console.log('选择的record:');
     console.log(props.record);
@@ -31,7 +35,46 @@ const UserModel = (props) => {
     // }, [props.record])
 
 
-    const init = useRequest(props.modelUrl);
+    //默认get请求
+    const init = useRequest(props.modelUrl, {
+        //是直接执行还是手动调用执行，true是手动执行run()，默认是false
+        manual: true
+    });
+
+    // const request = useRequest({
+    //     url: url,
+    //     method: method,
+    //     body: JSON.stringify(values)
+    // }, {
+
+    //     manual: true
+    // });
+
+    const request = useRequest(
+        (values) => {
+            console.log('request发送的参数为：')
+            console.log(values)
+            return {
+                url: `https://public-api-v2.aspirantzhang.com${values.url}`,
+                method: values.method,
+                //body: JSON.stringify(values)
+                //data和body相比，可以自动把对象json化
+                data:{
+                    ...values,
+                    'X-API-KEY':'antd',
+                    'create_time':moment(values.create_time).format(),
+                    'update_time':moment(values.create_time).format(),
+                },
+            }
+        }
+
+        , {
+
+            manual: true
+        });
+
+
+
 
     useEffect(() => {
         if (props.visible) {
@@ -262,7 +305,7 @@ const UserModel = (props) => {
                     if (field.type === 'datetime') {
 
                         result[field.key] = moment(data.dataSource[field.key])
-                    }else{
+                    } else {
                         result[field.key] = data.dataSource[field.key]
                     }
                     //如果还有其他类型需要单独处理在这里添加else if就可以了
@@ -279,6 +322,81 @@ const UserModel = (props) => {
 
 
 
+
+
+
+    //点击提交
+    const onFinish = (values) => {
+
+        // if (record === null) {
+        //     dispatch({
+        //         type: 'users/add',
+        //         payload: { ...values },
+        //     })
+        // } else {
+        //     dispatch({
+        //         type: 'users/edit',
+        //         payload: { ...values, key: record.key },
+        //     })
+        // }
+
+
+
+        //setuse的操作都是异步的，可能导致赋值还没有完毕就提前提交
+        //setValues(values)
+
+        //表单中的数据都在values中
+        request.run(values)
+        message.success('成功提交')
+        props.handleFinish()
+
+    };
+
+
+
+
+
+    //点击model中按钮时的处理
+    //传入的参数为：
+    //    {
+    //         "component": "button",
+    //         "text": "Delete",
+    //         "type": "default",
+    //         "action": "delete",
+    //         "uri": "/api/admins/delete",
+    //         "method": "post"
+    //     }
+    const actionHandel = (action) => {
+        //1.出发表单提交动作
+        //2.得到表单提交参数
+        //3.发送到后端
+        console.log('点击了：')
+        console.log(action)
+
+        switch (action.action) {
+            case 'submit':
+
+                //setuse的操作都是异步的，可能导致赋值还没有完毕就提前提交
+                // setUrl(action.uri)
+                // setmethod(action.method)
+                //比较好的处理方法是在form中把input隐藏：
+
+                form.setFieldsValue({ url: action.uri, method: action.method })
+                form.submit()
+                break;
+
+            case 'cancel':
+
+                props.handleCancel()
+
+                break;
+            default:
+                break;
+        }
+
+    }
+
+
     return (
         <Modal
             //点击周围不会自动关闭
@@ -290,21 +408,37 @@ const UserModel = (props) => {
             }}
             onCancel={props.handleCancel}
             forceRender
-            footer={ActionBuilder(init?.data?.layout?.actions[0].data)}
+            footer={ActionBuilder(init?.data?.layout?.actions[0].data, actionHandel)}
         >
 
             <Form
-                initialValues={{create_time:moment(),update_time:moment(),status:true}}
+                initialValues={{ create_time: moment(), update_time: moment(), status: true }}
                 form={form}
                 name="basic"
                 {...layout}
-                onFinish={props.onFinish}
+                onFinish={onFinish}
                 onFinishFailed={() => {
                     message.error('提交失败');
                 }}
             >
 
                 {FormBuilder(init?.data?.layout?.tabs[0].data)}
+
+
+                {/* 隐藏属性 */}
+                <Form.Item
+                    key='url'
+                    name='url'
+                >
+                    <Input hidden={true} />
+                </Form.Item>
+
+                <Form.Item
+                    name='method'
+                    key='method'
+                >
+                    <Input hidden={true} />
+                </Form.Item>
 
             </Form>
 
