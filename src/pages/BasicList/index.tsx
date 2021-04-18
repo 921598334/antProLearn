@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react'
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import { Row, Col, Tag, Card, Table, Space, Button, Pagination, message, Modal } from 'antd';
 import styles from './index.less'
-import { useRequest } from 'umi'
+import { useRequest, useIntl,history } from 'umi'
 import ColBuilder from './build/ColBuilder'
 import ActionBuilder from './build/ActionBuilder'
 import UserModel from './components/UserModel'
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, VideoCameraTwoTone } from '@ant-design/icons';
 
 const index = () => {
+
+
+    //国际化
+    const lang = useIntl();
 
     const { confirm } = Modal;
 
@@ -17,7 +21,7 @@ const index = () => {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const [modelVisible, setModelVisible] = useState(false)
-    const [modelUrl, setModelUrl] = useState(false)
+    const [modelUrl, setModelUrl] = useState('')
 
     const [modelTitle, setModelTitle] = useState("")
 
@@ -30,6 +34,14 @@ const index = () => {
         init.run()
     }, [page, perPage])
 
+
+    //model的url设置完成后在显示对话框,关闭对话框的时候需要情况地址
+    useEffect(() => {
+        if(modelUrl){
+            setModelVisible(true)
+            
+        }
+    }, [modelUrl])
 
 
 
@@ -72,7 +84,7 @@ const index = () => {
                 console.log("成功时返回：")
                 console.log(data)
                 //添加成功就关闭
-                message.success(data.message)    
+                message.success(data.message)
             },
         });
 
@@ -91,7 +103,7 @@ const index = () => {
     }, [init?.data?.layout?.tableColumn])
 
 
-    
+
 
 
 
@@ -99,6 +111,7 @@ const index = () => {
     const handleCancel = () => {
         console.log('点击取消，关闭对话框')
         setModelVisible(false)
+        setModelUrl('')
     };
 
 
@@ -113,8 +126,8 @@ const index = () => {
 
 
     const simpleColum = () => {
-       
-      
+
+
         return [
             // tableColum[0] || {},
             // tableColum[1] || {}
@@ -129,7 +142,7 @@ const index = () => {
     const batchOverview = (dataSourceTmp) => {
 
         console.log('点击了删除,需要删除的数据和col为：')
-        console.log(dataSourceTmp,tableColum)
+        console.log(dataSourceTmp, tableColum)
 
 
 
@@ -155,22 +168,28 @@ const index = () => {
 
 
         switch (action.action) {
-            //修改数据
+            //修改数据与添加
             case 'modal':
 
-                const newUri = action.uri?.replace(/:\w+/g, (filed) => {
+                var newUri = action.uri?.replace(/:\w+/g, (filed) => {
                     //匹配/:id,/:test 等,然后在record找到id或者test的内容对:id或者:test进行替换为具体值
                     console.log(filed)
                     return record[filed.replace(':', '')]
                 })
                 setModelUrl(newUri)
-                setModelVisible(true)
+                
                 setModelTitle("添加")
 
                 break;
-
+            //单叶设置
             case 'page':
-
+                 newUri = action.uri?.replace(/:\w+/g, (filed) => {
+                    //匹配/:id,/:test 等,然后在record找到id或者test的内容对:id或者:test进行替换为具体值
+                    console.log(filed)
+                    return record[filed.replace(':', '')]
+                })
+                //页面跳转
+                history.push('/basic-list'+newUri)
                 break;
 
             case 'reload':
@@ -181,21 +200,27 @@ const index = () => {
             case 'delete':
                 //如果是批量删除record是空，如果是点某一行对某个按钮删除，那么record不wei空
                 console.log('delete:')
-                console.log(record,selectedRows)
-        
+                console.log(record, selectedRows)
+
                 confirm({
+                    //国际化
+                    // title: lang.formatMessage({
+                    //     id:'basicList.actionHandle.confirmTitle'
+                    // },{
+                    //     operationName:action.action
+                    // }),
                     title: '您确认要删除吗？',
                     icon: <ExclamationCircleOutlined />,
                     //如果record是空表示是批量删除，否则是删除某一个
-                    content: batchOverview(record?[record]:selectedRows),
+                    content: batchOverview(record ? [record] : selectedRows),
                     onOk() {
                         console.log('OK');
-                        
+
                         return request.run({
-                            url:action.uri,
-                            method:action.method,
-                            type:'delete',
-                            ids:record?[record.id]:selectedRows,
+                            url: action.uri,
+                            method: action.method,
+                            type: 'delete',
+                            ids: record ? [record.id] : selectedRows,
                         })
                     },
                     onCancel() {
@@ -235,6 +260,7 @@ const index = () => {
         )
     }
 
+    //显示分页
     const afterTableLayout = () => {
         return (
             <Row>
@@ -268,10 +294,7 @@ const index = () => {
         )
     }
 
-    const batchLayout = () => {
-
-    }
-
+ 
 
 
 
@@ -298,8 +321,6 @@ const index = () => {
         } else {
             return null
         }
-
-
     }
 
 
@@ -311,7 +332,6 @@ const index = () => {
 
         <PageContainer>
             { searchLayout()}
-
 
             <Card>
                 {beforeTableLayout()}
@@ -328,7 +348,7 @@ const index = () => {
 
 
                 {afterTableLayout()}
-                {batchLayout()}
+
             </Card>
 
 

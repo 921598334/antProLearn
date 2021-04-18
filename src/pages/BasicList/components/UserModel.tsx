@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, Button, Form, Input, message } from 'antd';
+import { Modal, Button, Form, Input, message, Spin } from 'antd';
 import { useRequest } from 'umi'
 import FormBuilder from '../build/FormBuilder'
 import ActionBuilder from '../build/ActionBuilder'
@@ -15,11 +15,14 @@ const UserModel = (props) => {
         wrapperCol: { span: 16 },
     };
 
-    //不合适
-    // const [url, setUrl] = useState('')
-    // const [method, setmethod] = useState('')
-    // const [values, setValues] = useState('')
-
+    const example = {
+        margin: '20px 0',
+        marginBottom: '20px',
+        padding: '30px 50px',
+        textAlign: 'center',
+        background: 'rgba(0, 0, 0, 0.05)',
+        borderRadius: '4px',
+    };
 
 
 
@@ -327,7 +330,6 @@ const UserModel = (props) => {
         //setuse的操作都是异步的，可能导致赋值还没有完毕就提前提交
         //setValues(values)
 
-
         //表单中的数据都在values中
         request.run(values)
 
@@ -385,56 +387,57 @@ const UserModel = (props) => {
 
 
     return (
-        <Modal
-            //点击周围不会自动关闭
-            maskClosable={false}
-            title={props.title}
-            visible={props.visible}
-            onOk={() => {
-                form.submit()
-            }}
-            onCancel={props.handleCancel}
-            forceRender
-            footer={ActionBuilder(init?.data?.layout?.actions[0].data, actionHandel, request.loading)}
-        >
 
-            <Form
-                initialValues={{ create_time: moment(), update_time: moment(), status: true }}
-                form={form}
-                name="basic"
-                {...layout}
-                onFinish={onFinish}
-                onFinishFailed={() => {
-                    message.error('提交失败');
+        <Spin className="example" spinning={init.loading && !props.visible}>
+
+            <Modal
+                //点击周围不会自动关闭
+                maskClosable={false}
+                title={props.title}
+                visible={props.visible}
+                onOk={() => {
+                    form.submit()
                 }}
+                onCancel={props.handleCancel}
+                forceRender
+                footer={ActionBuilder(init?.data?.layout?.actions[0].data, actionHandel, request.loading)}
             >
 
-                {FormBuilder(init?.data?.layout?.tabs[0].data)}
-
-
-                {/* 隐藏属性 */}
-                <Form.Item
-                    key='url'
-                    name='url'
+                <Form
+                    initialValues={{ create_time: moment(), update_time: moment(), status: true }}
+                    form={form}
+                    name="basic"
+                    {...layout}
+                    onFinish={onFinish}
+                    onFinishFailed={() => {
+                        message.error('提交失败');
+                    }}
                 >
-                    <Input hidden={true} />
-                </Form.Item>
 
-                <Form.Item
-                    name='method'
-                    key='method'
-                >
-                    <Input hidden={true} />
-                </Form.Item>
-
-            </Form>
+                    {FormBuilder(init?.data?.layout?.tabs[0].data)}
 
 
+                    {/* 隐藏属性 */}
+                    <Form.Item
+                        key='url'
+                        name='url'
+                    >
+                        <Input hidden={true} />
+                    </Form.Item>
+
+                    <Form.Item
+                        name='method'
+                        key='method'
+                    >
+                        <Input hidden={true} />
+                    </Form.Item>
+
+                </Form>
+
+            </Modal>
+        </Spin>
 
 
-
-
-        </Modal>
     )
 }
 
