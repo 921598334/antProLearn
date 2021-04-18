@@ -20,18 +20,18 @@ const UserModel = (props) => {
     // const [method, setmethod] = useState('')
     // const [values, setValues] = useState('')
 
-   
+
 
 
     //默认get请求
     const init = useRequest(`https://public-api-v2.aspirantzhang.com${props.modelUrl}?X-API-KEY=antd`, {
         //是直接执行还是手动调用执行，true是手动执行run()，默认是false
         manual: true,
-        onError:()=>{
+        onError: () => {
 
         },
-        onSuccess:()=>{
-            
+        onSuccess: () => {
+
         }
     });
 
@@ -74,17 +74,17 @@ const UserModel = (props) => {
         , {
 
             manual: true,
-            onError:()=>{
+            onError: () => {
 
             },
-           
+
             //得到后端成功返回全部数据(需要添加这个)
-            formatResult:(res)=>{
+            formatResult: (res) => {
                 return res
             },
-             //如果没有上面的formatResult的化话，只接收返回数据有data的json，加上后data有后端返回的所有数据
-             //{"success":true,"message":"Add successfully.","data":[]}
-             onSuccess:(data)=>{
+            //如果没有上面的formatResult的化话，只接收返回数据有data的json，加上后data有后端返回的所有数据
+            //{"success":true,"message":"Add successfully.","data":[]}
+            onSuccess: (data) => {
                 console.log("成功时返回：")
                 console.log(data)
                 //添加成功就关闭
@@ -271,7 +271,7 @@ const UserModel = (props) => {
     }, [props.visible])
 
 
-    //监听编辑请求的返回数据
+    //监听编辑请求的返回数据,然后自动填充表单
     useEffect(() => {
         //发现有返回数据时，开始设置form
         if (init.data) {
@@ -324,20 +324,6 @@ const UserModel = (props) => {
     //点击提交
     const onFinish = (values) => {
 
-        // if (record === null) {
-        //     dispatch({
-        //         type: 'users/add',
-        //         payload: { ...values },
-        //     })
-        // } else {
-        //     dispatch({
-        //         type: 'users/edit',
-        //         payload: { ...values, key: record.key },
-        //     })
-        // }
-
-
-
         //setuse的操作都是异步的，可能导致赋值还没有完毕就提前提交
         //setValues(values)
 
@@ -385,6 +371,12 @@ const UserModel = (props) => {
                 props.handleCancel()
 
                 break;
+
+            case 'reset':
+
+                form.resetFields()
+
+                break;
             default:
                 break;
         }
@@ -403,7 +395,7 @@ const UserModel = (props) => {
             }}
             onCancel={props.handleCancel}
             forceRender
-            footer={ActionBuilder(init?.data?.layout?.actions[0].data, actionHandel,request.loading)}
+            footer={ActionBuilder(init?.data?.layout?.actions[0].data, actionHandel, request.loading)}
         >
 
             <Form
