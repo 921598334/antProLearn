@@ -388,7 +388,7 @@ const UserModel = (props) => {
 
     return (
 
-        <Spin className="example" spinning={init.loading && !props.visible}>
+        <Spin className="example" spinning={init.loading && props.visible}>
 
             <Modal
                 //点击周围不会自动关闭

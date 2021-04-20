@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
-import { Row, Col, Tag, Card, Table, Space, Button, Pagination, message, Modal } from 'antd';
+import { Row, Col, Tag, Card, Table, Space, Button, Pagination, message, Modal, Tooltip, Form, InputNumber } from 'antd';
 import styles from './index.less'
-import { useRequest, useIntl,history } from 'umi'
+import { useRequest, useIntl, history } from 'umi'
 import ColBuilder from './build/ColBuilder'
 import ActionBuilder from './build/ActionBuilder'
+import SearchBuilder from './build/SearchBuilder'
 import UserModel from './components/UserModel'
-import { ExclamationCircleOutlined, VideoCameraTwoTone } from '@ant-design/icons';
+import { ExclamationCircleOutlined, VideoCameraTwoTone, SearchOutlined } from '@ant-design/icons';
+import { values } from 'lodash';
+import { submintAdaptor } from './helper'
+//需要安装
+import { stringify } from 'qs'
+
 
 const index = () => {
 
@@ -15,9 +21,10 @@ const index = () => {
     const lang = useIntl();
 
     const { confirm } = Modal;
-
+    const [searchForm] = Form.useForm();
     const [tableColum, setTableColum] = useState([])
-
+    //搜索区域的显示与不显示
+    const [state, setState] = useState(false)
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const [modelVisible, setModelVisible] = useState(false)
@@ -34,19 +41,56 @@ const index = () => {
         init.run()
     }, [page, perPage])
 
-
     //model的url设置完成后在显示对话框,关闭对话框的时候需要情况地址
     useEffect(() => {
-        if(modelUrl){
+        if (modelUrl) {
             setModelVisible(true)
-            
+
         }
     }, [modelUrl])
 
 
 
     //可以直接获取数据，而不需要走dva
-    const init = useRequest(`https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd&page=${page}&per_page=${perPage}`)
+    //2哥功能，一个是分页查询，另一个是搜索查询
+    // const init = useRequest(`https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd&page=${page}&per_page=${perPage}`)
+    const init = useRequest(
+        (values) => {
+            message.loading("正在发送请求.....")
+            console.log('init发送的参数values为：')
+            console.log(values)
+            const valuesPara = submintAdaptor(values)
+            console.log('init发送的参数valuesPara为：')
+            console.log(valuesPara)
+            return {
+                url: `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd&page=${page}&per_page=${perPage}`,
+                method: 'get',
+                params: valuesPara,
+                paramsSerializer: (params) => {
+                    //参数对象中如果有数组，那对数组用逗号进行分割，合成一个字符串
+                    return stringify(params, { arrayFormat: 'comma' })
+                }
+            }
+        }
+        , {
+
+            onError: () => {
+
+            },
+            // //得到后端成功返回全部数据(需要添加这个)
+            // formatResult: (res) => {
+            //     return res
+            // },
+            // //如果没有上面的formatResult的化话，只接收返回数据有data的json，加上后data有后端返回的所有数据
+            // //{"success":true,"message":"Add successfully.","data":[]}
+            // onSuccess: (data) => {
+            //     console.log("成功时返回：")
+            //     console.log(data)
+            //     //添加成功就关闭
+            //     message.success(data.message)
+            // },
+        });
+
     console.log('init的数据为：')
     console.log(init)
 
@@ -63,6 +107,7 @@ const index = () => {
                 method: values.method,
                 //body: JSON.stringify(values)
                 //data和body相比，可以自动把对象json化
+                //post请求参数放在data里面，get请求参数发在params中
                 data: {
                     ...values,
                     'X-API-KEY': 'antd',
@@ -87,6 +132,9 @@ const index = () => {
                 message.success(data.message)
             },
         });
+
+
+
 
 
 
@@ -177,19 +225,19 @@ const index = () => {
                     return record[filed.replace(':', '')]
                 })
                 setModelUrl(newUri)
-                
+
                 setModelTitle("添加")
 
                 break;
             //单叶设置
             case 'page':
-                 newUri = action.uri?.replace(/:\w+/g, (filed) => {
+                newUri = action.uri?.replace(/:\w+/g, (filed) => {
                     //匹配/:id,/:test 等,然后在record找到id或者test的内容对:id或者:test进行替换为具体值
                     console.log(filed)
                     return record[filed.replace(':', '')]
                 })
                 //页面跳转
-                history.push('/basic-list'+newUri)
+                history.push('/basic-list' + newUri)
                 break;
 
             case 'reload':
@@ -237,9 +285,52 @@ const index = () => {
 
 
 
-
+    //根据返回的tableColum构建搜索区
     const searchLayout = () => {
 
+        return state ?
+            <Card className={styles.searchFrom}>
+
+                <Form
+                    form={searchForm}
+                    onFinish={(values) => {
+                        init.run(values)
+                    }}
+                >
+                    <Row gutter={24}>
+                        <Col sm={6}>
+                            <Form.Item
+                                key='id'
+                                label='ID'
+                                name='id'
+
+                            >
+                                <InputNumber style={{ width: '100%' }} />
+                            </Form.Item>
+                        </Col>
+                        {SearchBuilder(init.data?.layout?.tableColumn)}
+                    </Row>
+
+                    <Row>
+                        <Col sm={12}>
+                        </Col>
+
+                        <Col sm={12} className={styles.tableToolbar}>
+                            <Space className={styles.tableToolbar}>
+                                <Button type='primary' htmlType='submit'>submit</Button>
+                                <Button htmlType='reset' onClick={() => {
+                                    init.run();
+                                    searchForm.resetFields();
+                                }}>clearn</Button>
+                            </Space>
+                        </Col>
+
+
+                    </Row>
+                </Form>
+
+            </Card>
+            : ''
     }
 
     const beforeTableLayout = () => {
@@ -248,9 +339,10 @@ const index = () => {
                 <Col xs={24} sm={12}></Col>
                 <Col xs={24} sm={12} className={styles.tableToolbar}>
                     <Space>
-                        {/* <Button type="primary">add</Button>
-                        <Button type="primary">add2</Button>
-                         */}
+
+                        <Tooltip title="search">
+                            <Button type={state ? 'primary' : 'default'} shape="circle" icon={<SearchOutlined />} onClick={() => { setState(!state) }} />
+                        </Tooltip>
                         {ActionBuilder(init?.data?.layout?.tableToolBar, actionHandel, false)}
 
                     </Space>
@@ -294,7 +386,7 @@ const index = () => {
         )
     }
 
- 
+
 
 
 

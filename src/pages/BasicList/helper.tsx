@@ -31,19 +31,57 @@ export const setFildsAdaper = (data) => {
 
 
 
-    //对时间类型对象进行特殊处理
-    export  const submintAdaptor = (formValues) => {
+//对时间类型对象进行特殊处理
+export const submintAdaptor = (formValues) => {
 
-        const result ={}
+    const result = {}
 
-        //对象所有属性循环
-        Object.keys(formValues).forEach((key)=>{
-            result[key] = formValues[key]
-            if(moment.isMoment(formValues[key])){
-                result[key] = moment(formValues[key]).format()
-            }
-        })
-        
-        return result
+    if(formValues===undefined){
+        return {}
     }
-    
+
+    //对象所有属性循环(有可能对象的属性有数组类型，这个是否需要判断数组类型里面的每一项是不是时间类型)
+    Object.keys(formValues).forEach((key) => {
+
+        //对于时间类型，如果输入后又清空了，那就会变为null，之后在对时间数组扁平化处理后，传入对参数会传入空值
+        if(formValues[key]===null){
+            result[key] = undefined;
+        }else{
+            result[key] = formValues[key]
+        }
+
+        
+
+        //如果某个属性是时间类型，就转化为字符串类型
+        if (moment.isMoment(formValues[key])) {
+            result[key]  = (formValues[key]).format()
+        }
+
+        //如果某个属性是数组类型，就判断内部有没有时间类型
+        if(Array.isArray(result[key])){
+            // const timeArray =[]
+            // result[key].forEach((innerValue)=>{
+            //     if (moment.isMoment(innerValue)) {
+            //         timeArray.push(moment(innerValue).format())
+            //     }else{
+            //         timeArray.push(innerValue)
+            //     }
+            // })
+            // result[key] = timeArray
+
+
+            result[key] = result[key].map((innerValue)=>{
+                if (moment.isMoment(innerValue)) {
+                    return moment(innerValue).format()
+                }else{
+                    return innerValue
+                }  
+            })
+
+           
+        } 
+
+    })
+
+    return result
+}
