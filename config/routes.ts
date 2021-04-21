@@ -44,17 +44,19 @@
   },
 
   {
-    name: 'basic-list',
-    icon: 'table',
-    path: '/basic-list',
-    component: './BasicList',
-  },
-  {
     name: 'single-page',
     icon: 'table',
-    path: '/basic-list/api/admins/*',
+    path: '/basic-list/api/*/*',
     component: './BasicList/components/Page',
   },
+
+  {
+    name: 'basic-list',
+    icon: 'table',
+    path: '/basic-list/*',
+    component: './BasicList',
+  },
+
 
   {
     path: '/',

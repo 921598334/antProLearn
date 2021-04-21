@@ -1,12 +1,12 @@
 import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
 import { PageLoading } from '@ant-design/pro-layout';
-import { notification } from 'antd';
+import { message, notification } from 'antd';
 import type { RequestConfig, RunTimeLayoutConfig } from 'umi';
 import { history, Link } from 'umi';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import type { ResponseError } from 'umi-request';
-import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
+import { currentUser as queryCurrentUser ,queryCurrentMenu} from './services/ant-design-pro/api';
 import { BookOutlined, LinkOutlined } from '@ant-design/icons';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -23,8 +23,14 @@ export const initialStateConfig = {
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
   currentUser?: API.CurrentUser;
+  currentMenu?: any;
   fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
+
+
+
+
+
   const fetchUserInfo = async () => {
     try {
       const currentUser = await queryCurrentUser();
@@ -34,12 +40,30 @@ export async function getInitialState(): Promise<{
     }
     return undefined;
   };
-  // 如果是登录页面，不执行
+
+
+
+
+  const fetchMenu = async () => {
+    try {
+      const currentMenu = await queryCurrentMenu();
+      return currentMenu;
+    } catch (error) {
+      // history.push(loginPath);
+      message.error('获取菜单失败')
+    }
+    return undefined;
+  };
+
+
+  // 如果是登录页面，不执行，不是登录页面就返回用户信息，菜单等信息
   if (history.location.pathname !== loginPath) {
     const currentUser = await fetchUserInfo();
+    const currentMenu = await fetchMenu();
     return {
       fetchUserInfo,
       currentUser,
+      currentMenu,
       settings: {},
     };
   }
@@ -65,19 +89,30 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         history.push(loginPath);
       }
     },
-    links: isDev
-      ? [
-        <Link to="/umi/plugin/openapi" target="_blank">
-          <LinkOutlined />
-          <span>openAPI 文档</span>
-        </Link>,
-        <Link to="/~docs">
-          <BookOutlined />
-          <span>业务组件文档</span>
-        </Link>,
-      ]
-      : [],
+    // links: isDev
+    //   ? [
+    //     <Link to="/umi/plugin/openapi" target="_blank">
+    //       <LinkOutlined />
+    //       <span>openAPI 文档</span>
+    //     </Link>,
+    //     <Link to="/~docs">
+    //       <BookOutlined />
+    //       <span>业务组件文档</span>
+    //     </Link>,
+    //   ]
+    //   : [],
     menuHeaderRender: undefined,
+
+
+    //从后端生成菜单配置
+    menuDataRender:()=>{
+      return initialState?.currentMenu;
+    },
+    //图标
+    iconfontUrl:'//at.alicdn.com/t/font_2112134_uyx998l7ji.js',
+
+
+
     // 自定义 403 页面
     // unAccessible: <div>unAccessible</div>,
     ...initialState?.settings,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import { Row, Col, Tag, Card, Table, Space, Button, Pagination, message, Modal, Tooltip, Form, InputNumber } from 'antd';
 import styles from './index.less'
-import { useRequest, useIntl, history } from 'umi'
+import { useRequest, useIntl, history, useLocation} from 'umi'
 import ColBuilder from './build/ColBuilder'
 import ActionBuilder from './build/ActionBuilder'
 import SearchBuilder from './build/SearchBuilder'
@@ -19,7 +19,7 @@ const index = () => {
 
     //国际化
     const lang = useIntl();
-
+    const location = useLocation();
     const { confirm } = Modal;
     const [searchForm] = Form.useForm();
     const [tableColum, setTableColum] = useState([])
@@ -39,7 +39,7 @@ const index = () => {
     //确认page, perPage变化后在发起请求
     useEffect(() => {
         init.run()
-    }, [page, perPage])
+    }, [page, perPage,location.pathname])
 
     //model的url设置完成后在显示对话框,关闭对话框的时候需要情况地址
     useEffect(() => {
@@ -63,7 +63,7 @@ const index = () => {
             console.log('init发送的参数valuesPara为：')
             console.log(valuesPara)
             return {
-                url: `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd&page=${page}&per_page=${perPage}`,
+                url: `https://public-api-v2.aspirantzhang.com${location.pathname.replace('/basic-list','')}?X-API-KEY=antd&page=${page}&per_page=${perPage}`,
                 method: 'get',
                 params: valuesPara,
                 paramsSerializer: (params) => {
